@@ -1,30 +1,15 @@
 <?php
 
 
+$test = 1;
+if($test) {echo "not empty";}
+else {echo "empty";}
+
 
 //try {
 //    $conn = new PDO("mysql:host=localhost;port=3306;dbname=new_database", "root", "A159159_z");
 //    echo "Database connection established"."\n";
-//    $result = $conn->query("SHOW tables")->fetchAll();
-//    $tables = [];
-//    foreach ($result as $value) {
-//        $tables[] = $value[0];
-//    }
 //
-//    $columns = [];
-//    $num = 0;
-//    foreach($tables as $value){
-//            $rs = $conn->query('SELECT * FROM '.$value.' LIMIT 0');
-//            for ($i = 0; $i < $rs->columnCount(); $i++) {
-//            $col = $rs->getColumnMeta($i);
-//
-//            $columns[$num][$col['name']] = $col['native_type'] == "LONG" || $col['native_type'] == "TINY"
-//                                                               ? "number" : "string";
-//            };
-//            $num++;
-//        }
-//    $columns = json_encode($columns);
-//    print_r($columns);
 //
 //} catch (PDOException $e) {
 //        echo "Connection failed: ".$e->getMessage();

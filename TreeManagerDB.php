@@ -67,30 +67,24 @@ abstract class TreeManagerDB {
         if(!empty($this->dbJsonSchema)) {print_r(json_encode($this->dbJsonSchema));}
     }
 
-    abstract public function Create();
+    abstract public function Create($tablename, ...$values);
 
-    public function Read() {
-        $this->checkCRUDcondition();
-    }
+    abstract public function Read($tablename, ...$values);
 
-    public function Update() {
-        $this->checkCRUDcondition();
-    }
+    abstract public function Update($tablename, ...$values);
 
-    public function Delete() {
-        $this->checkCRUDcondition();
-    }
+    abstract public function Delete($tablename, ...$values);
 
-    private static function selfErrLog(string $message): void
+    protected static function selfErrLog(string $message): void
     { error_log(3, $message."\n",
         dirname(__FILE__)."/log.txt");
     }
 
-    private static function selfExceptions(string $message) : void {
+    protected static function selfExceptions(string $message) : void {
         throw new Exception($message);
     }
 
-    private function checkCRUDcondition() : void {
+    protected function checkCRUDcondition() : void {
         if(!$this->connected) {
             $this->selfErrLog("Database is not connected");
             $this->selfExceptions("Database is not connected");

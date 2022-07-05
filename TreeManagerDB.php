@@ -44,8 +44,26 @@ abstract class TreeManagerDB {
                 $rs = $this->pdoConnection->query('SELECT * FROM '.$value.' LIMIT 0');
                 for ($i = 0; $i < $rs->columnCount(); $i++) {
                     $col = $rs->getColumnMeta($i);
-                    $columns[$num][$col['name']] = $col['native_type'] == "LONG" || $col['native_type'] == "TINY"
-                        ? "number" : "string";
+
+                    $value = "";
+                    switch ($col['native_type'])
+                    {
+                        case "LONG":
+                        case "TINY":
+                            $value = "number";
+                            break;
+                        case "BOOL":
+                        case "BOOLEAN":
+                        case "BINARY":
+                            $value = "bool";
+                            break;
+
+                        default:
+                            $value="string";
+                            break;
+                    }
+
+                    $columns[$num][$col['name']] = $value;
                 };
                 $num++;
             }

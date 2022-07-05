@@ -4,9 +4,7 @@
 try {
     $conn = new PDO("mysql:host=localhost;port=3306;dbname=new_database", "root", "A159159_z");
     echo "Database connection established"."\n";
-    $result = $conn->query("SELECT * FROM cities")->fetch();
-    print_r($result);
-    echo $result["name"];
+    $id = $conn->query("SELECT id FROM cities WHERE id=2")->fetch();
 
 } catch (PDOException $e) {
         echo "Connection failed: ".$e->getMessage();

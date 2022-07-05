@@ -101,11 +101,17 @@ class AdjacencyList extends TreeManagerDB
     {
         try {
             $this->pdoConnection->beginTransaction();
-            $sql = "DELETE FROM $tablename WHERE id = $values[0]";
+            $id = $this->pdoConnection->query("SELECT id FROM $tablename WHERE id=$values[0]")->fetch();
+            $id = $id["id"];
+
+            $sql = "DELETE FROM $tablename WHERE parent_id=$id";
 
             if($this->pdoConnection->exec($sql)) {
-                $this->pdoConnection->commit();
-                return true;
+                $sql = "DELETE FROM $tablename WHERE id = $id";
+                if($this->pdoConnection->exec($sql)) {
+                    $this->pdoConnection->commit();
+                    return true;
+                }
             }
 
             $this->pdoConnection->rollBack();

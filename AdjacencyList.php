@@ -1,7 +1,29 @@
 <?php
 
-class AdjacencyList extends TreeManagerDB
-{
+class AdjacencyList {
+
+    private $tablename;
+
+    public function __construct($tablename)
+    {
+        $this->tablename = $tablename;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTablename()
+    {
+        return $this->tablename;
+    }
+
+    /**
+     * @param mixed $tablename
+     */
+    public function setTablename($tablename): void
+    {
+        $this->tablename = $tablename;
+    }
 
     public function Create($tablename ,...$values) : bool
     {

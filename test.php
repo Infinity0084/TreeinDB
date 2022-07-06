@@ -1,14 +1,31 @@
 <?php
+require ("./DatabaseConnection.php");
+require ("./TableManager.php");
+
+$result = DatabaseConnection::getInstance();
+$result = $result->getConnection();
+$result = $result->query("SELECT * FROM cities")->fetchAll();
+print_r($result);
+
+$conn = DatabaseConnection::getInstance();
+$conn = $conn->getConnection();
+
+$manager = TableManager::getInstance();
+$manager->makeDBScheme($conn);
+$result = $manager->getDBScheme();
+print_r($result);
 
 
-try {
-    $conn = new PDO("mysql:host=localhost;port=3306;dbname=new_database", "root", "A159159_z");
-    echo "Database connection established"."\n";
-    $id = $conn->query("SELECT id FROM cities WHERE id=2")->fetch();
 
-} catch (PDOException $e) {
-        echo "Connection failed: ".$e->getMessage();
-    }
+//
+//try {
+//    $conn = new PDO("mysql:host=localhost;port=3306;dbname=new_database", "root", "A159159_z");
+//    echo "Database connection established"."\n";
+//    $id = $conn->query("SELECT id FROM cities WHERE id=2")->fetch();
+//
+//} catch (PDOException $e) {
+//        echo "Connection failed: ".$e->getMessage();
+//    }
 
 //    $fields = ["cities", "regions"];
 //    $fields2 = ["id", "int"];

@@ -1,0 +1,15 @@
+{
+  "name": "ipakh/summerpractice",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "ipakh",
+      "email": "email@example.com"
+    }
+  ],
+  "require": {
+    "rakit/validation": "v0.22.3"
+  }
+}

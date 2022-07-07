@@ -1,19 +1,24 @@
 <?php
-require ("./DatabaseConnection.php");
-require ("./TableManager.php");
 
-$result = DatabaseConnection::getInstance();
-$result = $result->getConnection();
-$result = $result->query("SELECT * FROM cities")->fetchAll();
-print_r($result);
+$jsik = [
+  "number" => "'//'",
+];
 
-$conn = DatabaseConnection::getInstance();
-$conn = $conn->getConnection();
-
-$manager = TableManager::getInstance();
-$manager->makeDBScheme($conn);
-$result = $manager->getDBScheme();
-print_r($result);
+//require ("./DatabaseConnection.php");
+//require ("./TableManager.php");
+//
+//$result = DatabaseConnection::getInstance();
+//$result = $result->getConnection();
+//$result = $result->query("SELECT * FROM cities")->fetchAll();
+//print_r($result);
+//
+//$conn = DatabaseConnection::getInstance();
+//$conn = $conn->getConnection();
+//
+//$manager = TableManager::getInstance();
+//$manager->makeDBScheme($conn);
+//$result = $manager->getDBScheme();
+//print_r($result);
 
 
 

@@ -1,0 +1,53 @@
+{
+    "packages": [
+        {
+            "name": "rakit/validation",
+            "version": "v0.22.3",
+            "version_normalized": "0.22.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rakit/validation.git",
+                "reference": "61ed77b772c214faa67aaf1c4adf81502b06cd4b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rakit/validation/zipball/61ed77b772c214faa67aaf1c4adf81502b06cd4b",
+                "reference": "61ed77b772c214faa67aaf1c4adf81502b06cd4b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.*"
+            },
+            "time": "2018-11-10T03:57:56+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Rakit\\Validation\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Muhammad Syifa",
+                    "email": "emsifa@gmail.com"
+                }
+            ],
+            "description": "PHP Laravel like standalone validation library",
+            "support": {
+                "issues": "https://github.com/rakit/validation/issues",
+                "source": "https://github.com/rakit/validation/tree/master"
+            },
+            "install-path": "../rakit/validation"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}

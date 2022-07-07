@@ -5,9 +5,6 @@ class TableManager
     private static ?TableManager $instance=null;
     private array $dbJsonSchema = [];
 
-    private function __construct() {
-    }
-
     public function makeDBScheme($pdoConnection=null) : bool {
         if(empty($pdoConnection)) {return false;}
 

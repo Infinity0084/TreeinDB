@@ -5,15 +5,10 @@ class DatabaseConnection
     private static ?DatabaseConnection $instance=null;
     private ?PDO $dbConn=null;
 
+    private array $dbJsonSchema = [];
+
     private function __construct() {
-        $config = file_get_contents("config.txt");
-        $config = json_decode($config, true);
-        try {
-            $this->dbConn = new PDO("$config[db]:host=$config[host];port=$config[port];dbname=$config[dbname]",
-                                    $config["username"], $config["password"]);
-        } catch (Exception $e) {
-            error_log(3, $e->getMessage()."\n", dirname(__FILE__)."/log.txt");
-        }
+        $this->setConnection();
     }
 
     private function __clone(){
@@ -30,6 +25,18 @@ class DatabaseConnection
 
     public function getConnection() {
         return $this->dbConn;
+    }
+
+    public function setConnection($filename="config.txt") {
+        try {
+        $config = file_get_contents($filename);
+        $config = json_decode($config, true);
+
+            $this->dbConn = new PDO("$config[db]:host=$config[host];port=$config[port];dbname=$config[dbname]",
+                $config["username"], $config["password"]);
+        } catch (Exception $e) {
+            error_log(3, $e->getMessage()."\n", dirname(__FILE__)."/log.txt");
+        }
     }
 
 }

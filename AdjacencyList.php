@@ -1,68 +1,58 @@
 <?php
 
+require_once ("DatabaseConnection.php");
+require_once ("TableManager.php");
 
 class AdjacencyList {
 
-    private $tablename = null;
-    private ?array $tableScheme=null;
-    private ?PDO $dbConn=null;
+    private TableManager $tableScheme;
 
-    public function __construct($tablename=null, $tableScheme=null, $dbConn=null)
+    public function __construct($tablename)
     {
-        $this->dbConn = $dbConn;
-        $this->tableScheme = $tableScheme;
-        $this->tablename = $tablename;
-    }
-
-    public function getTableScheme()
-    {
-        return $this->tableScheme;
-    }
-
-    public function setTableScheme(array $tableScheme) {
-        $this->tableScheme = $tableScheme;
+        $this->tableScheme = new TableManager($tablename);
     }
 
     public function getTablename()
     {
-        return $this->tablename;
+        return $this->tableScheme->getTableName();
     }
 
     public function setTablename($tablename): void
     {
-        $this->tablename = $tablename;
+        unset($this->tableScheme);
+        $this->tableScheme = new TableManager($tablename);
     }
 
     public function Create(array $values) : bool
     {
+        $schema = $this->tableScheme->getTableScheme();
+        if(count($values) != count($schema)) {return false;}
+
+        $db = DatabaseConnection::getInstance()->getConnection();
+        $db->beginTransaction();
 
             try{
-                $this->dbConn->beginTransaction();
-                $stringa = "";
-                $skipid=false;
+                $schemeNames = array_keys($schema);
+                unset($schemeNames[0]);
+                if(!$this->checkParentExisting(end($values))){return 0;}
 
-                foreach(array_keys($this->tableScheme) as $value) {
-                    if(!$skipid) {$skipid =true; continue;}
-                    $stringa .= $value.",";
+                $tablename = $this->tableScheme->getTableName();
+
+                $schemeValues = join(",", $schemeNames);
+                $params = [];
+                foreach($schemeNames as $value) {
+                    $params[] = "?";
                 }
-                $stringa = rtrim($stringa, ",");
+                $params = join(",", $params);
 
-                $stringa2 = "";
-                foreach($values as $value) {
-                    $stringa2 .= "?,";
-                }
-                $stringa2 = rtrim($stringa2, ",");
-
-
-                $sql = $this->dbConn->prepare("INSERT INTO $this->tablename ($stringa) VALUES ($stringa2)");
+                $sql = $db->prepare("INSERT INTO $tablename ($schemeValues) VALUES ($params)");
                 $i = 1;
-                foreach (array_keys($this->tableScheme) as $value)
+                foreach ($schemeNames as $value)
                 {
                     $paramType = 0;
-                    switch ($this->dbConn[$value]) {
+                    switch ($schema[$value]) {
 
-                        case "float":
-                        case "int":
+                        case "number":
                             $paramType = PDO::PARAM_INT;
                             break;
 
@@ -78,32 +68,27 @@ class AdjacencyList {
                             $paramType = PDO::PARAM_STR_CHAR;
                     }
 
-                    $sql->bindParam($i, $value, $paramType);
+                    $sql->bindValue($i, $value, $paramType);
                     $i++;
                 }
 
                 $sql->execute();
 
-                $this->dbConn->commit();
-
+                $db->commit();
+                return true;
             }   catch (Exception $e) {
-                $this->dbConn->rollBack();
+                $db->rollBack();
                 return false;
             }
-
-        return false;
     }
 
-    public function Read($id=null)
+    public function Read()
     {
-        if(filter_var($id, FILTER_VALIDATE_INT)) {return 0;}
-
+        $tablename = $this->tableScheme->getTableName();
             try {
-                $sql = $id==null ? "SELECT * FROM $this->tablename LIMIT 50" :
-                    "SELECT * FROM $this->tablename WHERE id=$id LIMIT 50";
+                $sql = "SELECT * FROM $tablename LIMIT 50";
 
-                $results = $this->dbConn->query($sql)->fetchAll();
-                return $results;
+                return DatabaseConnection::getInstance()->getConnection()->query($sql)->fetchAll();
             } catch (Exception $e) {
                 error_log(3, $e->getMessage(), dirname(__FILE__)."/log.txt");
             }
@@ -113,69 +98,108 @@ class AdjacencyList {
         if(filter_var($id, FILTER_VALIDATE_INT)) {return 0;}
 
         try {
-            $sql = "SELECT * FROM $this->tablename WHERE parent_id=$id LIMIT 50";
+            $sql = "SELECT * FROM $this->tableScheme->getTableName() WHERE parent_id=$id LIMIT 50";
 
-            $results = $this->dbConn->query($sql)->fetchAll();
-            return $results;
+            return DatabaseConnection::getInstance()->getConnection()->query($sql)->fetchAll();
 
         } catch (Exception $e) {
             error_log(3, $e->getMessage(), dirname(__FILE__)."/log.txt");
         }
     }
 
-    public function Update($id, $values)
+    public function Update($id, $field, $newValue)
     {
-        if(filter_var($id, FILTER_VALIDATE_INT)) {return 0;}
+        if(filter_var($id, FILTER_VALIDATE_INT) && $id <= 0) {return 0;}
+        if(!in_array($field, array_keys($this->tableScheme->getTableScheme()))) {return 0;}
+        if($field=="parent_id" && !$this->checkParentExisting($id)) {return 0;}
+
+        $db = DatabaseConnection::getInstance()->getConnection();
+        $tablename = $this->tableScheme->getTableName();
 
         try {
-            $this->dbConn->beginTransaction();
-            $sql = "UPDATE $this->tablename SET $values[1]=$values[2] WHERE id=$values[0]";
-            if($result = $this->dbConn->exec($sql)) {
-                $this->dbConn->commit();
+            $db->beginTransaction();
+
+            $sql = "UPDATE $tablename SET $field=? WHERE id=$id";
+
+            $sqlPreparedQuery = $db->prepare($sql);
+
+            $paramType=null;
+
+            switch ($this->tableScheme->getTableScheme()[$field]) {
+
+                case "float":
+                case "int":
+                    $paramType = PDO::PARAM_INT;
+                    break;
+
+                case "string":
+                    $paramType = PDO::PARAM_STR;
+                    break;
+
+                case "bool":
+                    $paramType = PDO::PARAM_BOOL;
+                    break;
+
+                default:
+                    $paramType = PDO::PARAM_STR_CHAR;
+            }
+
+
+            $sqlPreparedQuery->bindValue(1, $newValue, $paramType);
+
+            if($result = $sqlPreparedQuery->execute()) {
+                $db->commit();
                 return true;
             }
 
-            $this->dbConn->rollBack();
+            $db->rollBack();
             return false;
 
         } catch (Exception $e) {
             error_log(3, $e->getMessage(), dirname(__FILE__)."/log.txt");
-            $this->dbConn->rollBack();
+            $db->rollBack();
             return false;
         }
     }
 
-    public function Delete($id=null)
+    public function Delete($id)
     {
+        if(filter_var($id, FILTER_VALIDATE_INT) && $id > 0) {return 0;}
+
+        $db = DatabaseConnection::getInstance()->getConnection();
         try {
-            $this->dbConn->beginTransaction();
-            $id = $this->dbConn->query("SELECT id FROM $this->tablename WHERE id=$id")->fetch();
+            $db->beginTransaction();
+            $id = $db->query("SELECT id FROM $this->tableScheme->getTableName() WHERE id=$id")->fetch();
             $id = $id["id"];
 
-            $sql = "DELETE FROM $this->tablename WHERE parent_id=$id";
+            $sql = "DELETE FROM $this->tableScheme->getTableName() WHERE parent_id=$id";
 
-            if($this->dbConn->exec($sql)) {
-                $sql = "DELETE FROM $this->tablename WHERE id = $id";
-                if($this->dbConn->exec($sql)) {
-                    $this->dbConn->commit();
+            if($db->exec($sql)) {
+                $sql = "DELETE FROM $this->tableScheme->getTableName() WHERE id = $id";
+                if($db->exec($sql)) {
+                    $db->commit();
                     return true;
                 }
             }
 
-            $this->dbConn->rollBack();
+            $db->rollBack();
             return false;
 
         } catch (Exception $e) {
             error_log(3, $e->getMessage(), dirname(__FILE__)."/log.txt");
-            $this->dbConn->rollBack();
+            $db->rollBack();
             return false;
         }
     }
 
-    private function checkParentExisting($values) {
+    private function checkParentExisting($parent_id) {
+        $db = DatabaseConnection::getInstance()->getConnection();
         try {
-            $exist = $this->dbConn->query("SELECT * FROM ".$this->tablename."WHERE id=".end($values))->fetch();
-            if($exist) {return true;} else {return false;}
+            $tablename = $this->tableScheme->getTableName();
+            $exist = $db->prepare("SELECT * FROM $tablename WHERE id=?");
+            $exist->bindValue(1, $parent_id, PDO::PARAM_INT);
+
+            if($exist->execute()) {return true;} else {return false;}
         } catch(Exception $e) {
             error_log(3, $e->getMessage(), dirname(__FILE__)."/log.txt");
             return false;

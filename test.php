@@ -1,8 +1,10 @@
 <?php
 
-$jsik = [
-  "number" => "'//'",
-];
+require ("AdjacencyList.php");
+
+$test = new AdjacencyList("al_tree");
+$test->Create([8, "orange", 5]);
+
 
 //require ("./DatabaseConnection.php");
 //require ("./TableManager.php");

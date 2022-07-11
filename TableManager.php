@@ -1,72 +1,54 @@
 <?php
 
+require_once ("DatabaseConnection.php");
+
 class TableManager
 {
-    private static ?TableManager $instance=null;
-    private array $dbJsonSchema = [];
+    private array $tableScheme;
 
-    public function makeDBScheme($pdoConnection=null) : bool {
-        if(empty($pdoConnection)) {return false;}
+    public function __construct($tableName) {
+        $dbConn = DatabaseConnection::getInstance()->getConnection();
+        $result = $dbConn->query("SHOW tables")->fetchAll();
+        $this->tableName = $tableName;
+        $tables = [];
+        foreach ($result as $value) {
+            if($value[0]==$tableName) {$tables[] = $value[0]; break;}
+        }
+        $columns = [];
 
-        try {
-            $result = $pdoConnection->query("SHOW tables")->fetchAll();
-            $tables = [];
-            foreach ($result as $value) {
-                $tables[] = $value[0];
+        $rs = $dbConn->query('SELECT * FROM '.$tables[0].' LIMIT 0');
+        for ($i = 0; $i < $rs->columnCount(); $i++) {
+            $col = $rs->getColumnMeta($i);
+
+            $value = "";
+            switch ($col['native_type'])
+            {
+                case "LONG":
+                case "TINY":
+                case "LONGLONG":
+                    $value = "number";
+                    break;
+                case "BOOL":
+                case "BOOLEAN":
+                case "BINARY":
+                    $value = "bool";
+                    break;
+
+                default:
+                    $value="string";
+                    break;
             }
 
-            $columns = [];
-            $num = 0;
-
-            foreach($tables as $value){
-                $rs = $pdoConnection->query('SELECT * FROM '.$value.' LIMIT 0');
-                for ($i = 0; $i < $rs->columnCount(); $i++) {
-                    $col = $rs->getColumnMeta($i);
-
-                    $value = "";
-                    switch ($col['native_type'])
-                    {
-                        case "LONG":
-                            $value = "int";
-                            break;
-
-                        case "DECIMAL":
-                            $value = "float";
-                            break;
-
-                        case "TINY":
-                        case "BOOL":
-                        case "BOOLEAN":
-                        case "BINARY":
-                            $value = "bool";
-                            break;
-
-                        default:
-                            $value="string";
-                            break;
-                    }
-
-                    $columns[$num][$col['name']] = $value;
-                };
-                $num++;
-            }
-            $this->dbJsonSchema = $columns;
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-
+            $columns[$tableName][$col['name']] = $value;
+        };
+        $this->tableScheme = $columns;
     }
 
-    public static function getInstance() {
-        if(!self::$instance) {
-            self::$instance = new TableManager();
-        }
-
-        return self::$instance;
+    public function getTableScheme() : array {
+        return $this->tableScheme[$this->tableName];
     }
 
-    public function getDBScheme() {
-        return $this->dbJsonSchema;
+    public function getTableName() : string {
+        return array_key_first($this->tableScheme);
     }
 }

@@ -9,6 +9,10 @@ class TableManager
     public function __construct($tableName) {
         $dbConn = DatabaseConnection::getInstance()->getConnection();
         $result = $dbConn->query("SHOW tables")->fetchAll();
+
+        $idExist = false;
+        $parent_idExist = false;
+
         $this->tableName = $tableName;
         $tables = [];
         foreach ($result as $value) {
@@ -38,10 +42,12 @@ class TableManager
                     $value="string";
                     break;
             }
-
+            if($col["name"]==="id") {$idExist = true;}
+            if($col["name"]==="parent_id") {$parent_idExist = true;}
             $columns[$tableName][$col['name']] = $value;
         };
         $this->tableScheme = $columns;
+        if($this->tableScheme==null || !($idExist && $parent_idExist)) {throw new Exception("Couldn't make Database schema");}
     }
 
     public function getTableScheme() : array {

@@ -95,10 +95,11 @@ class AdjacencyList {
     }
 
     public function ReadDescendants($id) {
-        if(filter_var($id, FILTER_VALIDATE_INT)) {return 0;}
-
+        if(filter_var($id, FILTER_VALIDATE_INT) && $id <= 0) {return 0;}
+        $db = DatabaseConnection::getInstance()->getConnection();
         try {
-            $sql = "SELECT * FROM $this->tableScheme->getTableName() WHERE parent_id=$id LIMIT 50";
+            $sql =$db->prepare("SELECT * FROM $this->tableScheme->getTableName() WHERE parent_id=? LIMIT 50");
+            $sql->bindValue(1, $id, PDO::PARAM_INT);
 
             return DatabaseConnection::getInstance()->getConnection()->query($sql)->fetchAll();
 
@@ -164,22 +165,21 @@ class AdjacencyList {
 
     public function Delete($id)
     {
-        if(filter_var($id, FILTER_VALIDATE_INT) && $id > 0) {return 0;}
+        if(filter_var($id, FILTER_VALIDATE_INT) && $id <= 0) {return 0;}
 
         $db = DatabaseConnection::getInstance()->getConnection();
         try {
             $db->beginTransaction();
-            $id = $db->query("SELECT id FROM $this->tableScheme->getTableName() WHERE id=$id")->fetch();
-            $id = $id["id"];
+            $tablename = $this->tableScheme->getTableName();
 
-            $sql = "DELETE FROM $this->tableScheme->getTableName() WHERE parent_id=$id";
+            if(!$this->checkParentExisting($id)) {return 0;}
 
-            if($db->exec($sql)) {
-                $sql = "DELETE FROM $this->tableScheme->getTableName() WHERE id = $id";
-                if($db->exec($sql)) {
-                    $db->commit();
-                    return true;
-                }
+            $sql = $db->prepare("DELETE FROM $tablename WHERE id=?");
+            $sql->bindValue(1, $id, PDO::PARAM_INT);
+
+            if($result = $sql->execute()) {
+                $db->commit();
+                return true;
             }
 
             $db->rollBack();
@@ -190,6 +190,32 @@ class AdjacencyList {
             $db->rollBack();
             return false;
         }
+    }
+
+    public function DeleteDescendants($id) {
+       if(filter_var($id, FILTER_VALIDATE_INT) && $id <= 0) {return 0;}
+
+       $db = DatabaseConnection::getInstance()->getConnection();
+       try {
+           $db->beginTransaction();
+           $tablename = $this->tableScheme->getTableName();
+
+           if(!$this->checkParentExisting($id)) {return 0;}
+
+           $sql = $db->prepare("DELETE FROM $tablename WHERE parent_id=?");
+           $sql->bindValue(1, $id, PDO::PARAM_INT);
+
+           if($result = $sql->execute()) {
+               $db->commit();
+               return true;
+           }
+
+       } catch (Exception $e) {
+           error_log(3, $e->getMessage(), dirname(__FILE__)."/log.txt");
+           $db->rollBack();
+           return false;
+       }
+
     }
 
     private function checkParentExisting($parent_id) {

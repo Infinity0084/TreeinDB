@@ -1,9 +1,20 @@
 <?php
 
-require ("AdjacencyList.php");
+//require ("AdjacencyList.php");
+require ("DatabaseConnection.php");
 
-$test = new AdjacencyList("al_tree");
-$test->Create([8, "orange", 5]);
+//$test = new AdjacencyList("al_tree");
+//$test->Delete(9);
+
+$db = DatabaseConnection::getInstance()->getConnection();
+$arrik = [];
+$result = $db->query("SELECT parent_id, id FROM al_tree")->fetchAll();
+foreach ($result as $value) {
+//    if($value["parent_id"] != null && $value["id"] != null) {
+        $arrik[$value["id"]] = $value["parent_id"];
+//    }
+}
+print_r($arrik);
 
 
 //require ("./DatabaseConnection.php");

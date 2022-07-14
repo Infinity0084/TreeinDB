@@ -1,0 +1,1 @@
+{"class":"go.GraphLinksModel","nodeDataArray":[{"key":1,"name":"food"},{"key":2,"name":"vegetable"},{"key":3,"name":"potato"},{"key":4,"name":"tomato"},{"key":5,"name":"fruit"},{"key":6,"name":"apple"},{"key":7,"name":"banana"}],"linkDataArray":[{"from":1,"to":2},{"from":2,"to":3},{"from":2,"to":4},{"from":1,"to":5},{"from":5,"to":6},{"from":5,"to":7}]}

@@ -1,8 +1,32 @@
-function init() {
+const limitOrdersRequest = new XMLHttpRequest();
 
-    // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
-    // For details, see https://gojs.net/latest/intro/buildingObjects.html
+let testvar;
+
+limitOrdersRequest.onreadystatechange = function(){
+    let limitOrdersAnswer;
+    if (this.readyState === 4) {
+        if (this.status === 200) {
+            limitOrdersAnswer = this.responseText;
+            console.log(limitOrdersAnswer);
+
+            testvar=limitOrdersAnswer;
+        } else {
+            console.log("Статус запроса: " + this.status + ".Не возможно обновить значения.");
+        }
+    }
+
+}
+function getData() {
+    limitOrdersRequest.open('GET', 'test.php');
+    limitOrdersRequest.send();
+}
+
+function init() {
     const $ = go.GraphObject.make;  // for conciseness in defining templates
+    console.log("before Data get");
+    getData()
+    answer = JSON.parse(testvar);
+    console.log(answer["nodeDataArray"][0]);
 
     myDiagram =
         $(go.Diagram, "myDiagramDiv", // must be the ID or reference to div
@@ -40,22 +64,10 @@ function init() {
                 "undoManager.isEnabled": true
             });
 
-    // when the document is modified, add a "*" to the title and enable the "Save" button
-    myDiagram.addDiagramListener("Modified", e => {
-        var button = document.getElementById("SaveButton");
-        if (button) button.disabled = !myDiagram.isModified;
-        var idx = document.title.indexOf("*");
-        if (myDiagram.isModified) {
-            if (idx < 0) document.title += "*";
-        } else {
-            if (idx >= 0) document.title = document.title.slice(0, idx);
-        }
-    });
-
     var graygrad = $(go.Brush, "Linear",
         { 0: "rgb(125, 125, 125)", 0.5: "rgb(86, 86, 86)", 1: "rgb(86, 86, 86)" });
 
-    // when a node is double-clicked, add a child to it
+
     function nodeDoubleClick(e, obj) {
         var clicked = obj.part;
         if (clicked !== null) {
@@ -69,7 +81,6 @@ function init() {
         }
     }
 
-    // this is used to determine feedback during drags
     function mayWorkFor(node1, node2) {
         if (!(node1 instanceof go.Node)) return false;  // must be a Node
         if (node1 === node2) return false;  // cannot work for yourself
@@ -77,13 +88,10 @@ function init() {
         return true;
     }
 
-    // This function provides a common style for most of the TextBlocks.
-    // Some of these values may be overridden in a particular TextBlock.
     function textStyle() {
         return { font: "9pt sans-serif", stroke: "white" };
     }
 
-    // define the Node template
     myDiagram.nodeTemplate =
         $(go.Node, "Auto",
             { doubleClick: nodeDoubleClick },
@@ -162,17 +170,7 @@ function init() {
                 $(go.TextBlock, textStyle(),
                     { row: 2, column: 4 },
                     new go.Binding("text", "parent")),
-                $(go.TextBlock,  // the comments
-                    {
-                        row: 3, column: 0, columnSpan: 5,
-                        font: "italic 9pt sans-serif",
-                        wrap: go.TextBlock.WrapFit,
-                        editable: true,  // by default newlines are allowed
-                        stroke: "white",
-                        minSize: new go.Size(10, 14),
-                        name: "comments"
-                    },
-                    new go.Binding("text", "comments").makeTwoWay()),
+
                 $("TreeExpanderButton",
                     { row: 4, columnSpan: 99, alignment: go.Spot.Center })
             )  // end Table Panel
@@ -279,6 +277,7 @@ function save() {
     myDiagram.isModified = false;
 }
 function load() {
-    myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+    myDiagram.model = go.Model.fromJson(answer);
 }
+
 window.addEventListener('DOMContentLoaded', init);

@@ -5,7 +5,6 @@ require ("AdjacencyList.php");
 $test = new AdjacencyList("al_tree");
 
 $result = $test->Read();
-print_r($result);
 $newresult = [];
 $newresult["class"] = "go.GraphLinksModel";
 $newresult["nodeDataArray"] = [];
@@ -15,14 +14,15 @@ $vstavkaData = [];
 $vstavkaLink = [];
 foreach($result as $value) {
     $vstavkaData["key"] = $value["id"];
-    unset($value[0]);
+
     if($value["parent_id"] != null) {
-        $vstavkaLink["to"] = $value["id"];
         $vstavkaLink["from"] = $value["parent_id"];
+        $vstavkaLink["to"] = $value["id"];
+
         $newresult["linkDataArray"][] = $vstavkaLink;
     }
     unset($value["parent_id"]);
-
+    unset($value["id"]);
 
     foreach (array_keys($value) as $item) {
         $vstavkaData[$item] = $value[$item];
@@ -30,11 +30,11 @@ foreach($result as $value) {
     $newresult["nodeDataArray"][] = $vstavkaData;
 }
 
-$newresult =json_encode($newresult);
+$newresult =json_encode($newresult, JSON_NUMERIC_CHECK);
 $file = fopen("mySavedModel.json", "w");
 fwrite($file, $newresult);
 fclose($file);
-header("Content-type: application/json");
+header('Content-Type: application/json');
 echo $newresult;
 
 

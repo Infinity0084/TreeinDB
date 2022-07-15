@@ -1,8 +1,32 @@
-function init() {
+const limitOrdersRequest = new XMLHttpRequest();
 
-    // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
-    // For details, see https://gojs.net/latest/intro/buildingObjects.html
+let testvar;
+
+limitOrdersRequest.onreadystatechange = function(){
+    let limitOrdersAnswer;
+    if (this.readyState === 4) {
+        if (this.status === 200) {
+            limitOrdersAnswer = this.responseText;
+            console.log(limitOrdersAnswer);
+
+            testvar=limitOrdersAnswer;
+        } else {
+            console.log("Статус запроса: " + this.status + ".Не возможно обновить значения.");
+        }
+    }
+
+}
+function getData() {
+    limitOrdersRequest.open('GET', 'test.php');
+    limitOrdersRequest.send();
+}
+
+function init() {
     const $ = go.GraphObject.make;  // for conciseness in defining templates
+    console.log("before Data get");
+    getData()
+    answer = JSON.parse(testvar);
+    console.log(answer["nodeDataArray"][0]);
 
     myDiagram =
         $(go.Diagram, "myDiagramDiv", // must be the ID or reference to div
@@ -62,7 +86,7 @@ function init() {
             var thisemp = clicked.data;
             myDiagram.startTransaction("add employee");
             var nextkey = (myDiagram.model.nodeDataArray.length + 1).toString();
-            var newemp = { key: nextkey, name: "(new node)", title: "" };
+            var newemp = { key: nextkey, name: "(new node)" };
             myDiagram.model.addNodeData(newemp);
             myDiagram.model.addLinkData({ from: thisemp.key, to: nextkey });
             myDiagram.commitTransaction("add node");
@@ -162,17 +186,7 @@ function init() {
                 $(go.TextBlock, textStyle(),
                     { row: 2, column: 4 },
                     new go.Binding("text", "parent")),
-                $(go.TextBlock,  // the comments
-                    {
-                        row: 3, column: 0, columnSpan: 5,
-                        font: "italic 9pt sans-serif",
-                        wrap: go.TextBlock.WrapFit,
-                        editable: true,  // by default newlines are allowed
-                        stroke: "white",
-                        minSize: new go.Size(10, 14),
-                        name: "comments"
-                    },
-                    new go.Binding("text", "comments").makeTwoWay()),
+
                 $("TreeExpanderButton",
                     { row: 4, columnSpan: 99, alignment: go.Spot.Center })
             )  // end Table Panel
